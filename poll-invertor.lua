@@ -1,5 +1,9 @@
 print("Ginlong Invertor Poller started\n")
 
+login = require "login"
+
+print("using Pvoutput.org API key:" .. login.API_KEY)
+
 DEBUG = false
 
 SERIAL_PORT = "/dev/rfcomm0"
@@ -11,6 +15,8 @@ MAX_RETRIES = 5
 INQUIRY_HEX  = "7E01A1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A2"
 -- all valid responses from invertor begin with this set of bytes
 RESPONSE_PREFIX  = "7E01A11C"
+
+PVOUTPUT_API_URL = "http://pvoutput.org/service/r2/addstatus.jsp"
 
 ----------------
 -- inverter data
@@ -101,6 +107,12 @@ function string.tohex(str)
   end
 end
 
+-- s is string with $key placeholders and data is a table
+function expand (s, data)
+  return (string.gsub(s, "$(%w+)", data))
+end
+
+
 function parseResponse(str)
   if str == nill then return end
   local prefixLen = string.len(RESPONSE_PREFIX) + 1
@@ -110,20 +122,41 @@ function parseResponse(str)
   else
     print("Data BAD: " .. "[" .. #str .."]" .. hexData)
   end
---  local highbyte = string.sub(str,2,2) or "0"
---  local lowbyte =  string.sub(str,1,1) or "0"
---  print((lowbyte..highbyte):tohex())
   
+  local values = {}
   for i in pairs(DATA_DEFS) do
     dataIndex = prefixLen + (DATA_DEFS[i].index * 2)
     print(dataIndex .. ":" .. i)
     local lowbyte =  string.sub(hexData, dataIndex, dataIndex+1) or "0"
     local highbyte = string.sub(hexData, dataIndex+2, dataIndex+3) or "0"
     local val = (highbyte .. lowbyte)
-    print(val .. "=" .. (tonumber(val, 16) * DATA_DEFS[i].multiply) .. DATA_DEFS[i].units)
+    local result = (tonumber(val, 16) * DATA_DEFS[i].multiply)
+    print(val .. "=" .. result .. DATA_DEFS[i].units)
+    values[i] = result
   end
-
+  wattage = (values["vpv1"] * values["ipv1"]) + (values["vpv2"] * values["ipv2"])
+  print("WATTAGE:" .. wattage)
+  sendToPVOutput(wattage)
 end
+
+
+-- send to pvoutput
+-- eg. curl -d "d=20140105" -d "t=18:28" -d "v2=924" -H "X-Pvoutput-Apikey:020a555555566666667777888fff" -H "X-Pvoutput-SystemId:12345" http://pvoutput.org/service/r2/addstatus.jsp 
+function sendToPVOutput(wattage)
+  local vals = {}
+  vals.sysidHeader = "X-Pvoutput-SystemId:" .. login.SYSTEM_ID
+  vals.apiKeyHeader = "X-Pvoutput-Apikey:" .. login.API_KEY
+  vals.date = os.date("%Y%m%d")
+  vals.time = os.date("%H:%M")
+  vals.curlExe = "curl"
+  vals.url = PVOUTPUT_API_URL
+  vals.wattage = wattage
+  
+  curlStr = expand("$curlExe -d d=\"$date\" -d t=\"$time\" -d v2=\"$wattage\" -H \"$apiKeyHeader\" -H  \"$sysidHeader\" $url", vals)
+  print("EXEC:" .. curlStr)
+  os.execute(curlStr)
+end
+
 
 if DEBUG then
   dumpResponse = assert(io.open("reading.bin","w"))
