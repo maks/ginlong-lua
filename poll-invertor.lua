@@ -6,37 +6,17 @@ SERIAL_PORT = "/dev/rfcomm0"
 MAX_RETRIES = 5
 
 -- Bytes to send to request data from invertor
-inquiryHex  = "7E01A1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A2"
+INQUIRY_HEX  = "7E01A1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A2"
 -- all valid responses from invertor begin with this set of bytes
 RESPONSE_PREFIX  = "7E01A11C"
-
---------------------------------------------------
--- hex start indeces and lengths for certain data
---------------------------------------------------
-
-data_to_follow_index    = 3
-capacity_index          = 20
-capacity_length         = 0
-firmware_index          = 32
-firmware_length         = 0
-model_index             = 46
-model_length            = 0
-manuf_index             = 74
-manuf_length            = 0
-serial_index            = 106
-serial_length           = 0
-other_index             = 138
-other_length            = 0
-confserial_index        = 18
-
 
 ----------------
 -- inverter data
 ----------------
 
-data = {}
+DATA_DEFS = {}
 
-data["vpv1"] = { 
+DATA_DEFS["vpv1"] = { 
 multiply = 0.1,
 units  = "V",
 index	   = 0,
@@ -44,7 +24,7 @@ descr    = "Panel 1 Voltage",
 flip     = 1
 }
 
-data["vpv2"] = {
+DATA_DEFS["vpv2"] = {
 multiply = 0.1,
 units  = "V",
 index	   = 24,
@@ -52,49 +32,49 @@ descr    = "Panel 2 Voltage",
 flip     = 1
 }
 
-data["ipv1"] = {
+DATA_DEFS["ipv1"] = {
 multiply = 0.1,
 units  = "A",
 index	 = 2,
 descr    = "Panel 1 DC Current"
 }
 
-data["ipv2"] = {
+DATA_DEFS["ipv2"] = {
 multiply = 0.1,
 units  = "A",
 index	 = 26,
 descr    = "Panel 2 DC Current"
 }
 
-data["emonth"] = {
+DATA_DEFS["emonth"] = {
 multiply = 1,
 units  = "kWh",
 index	 = 29,
 descr    = "Accumulated Energy This Month"
 }
 
-data["lmonth"] = {
+DATA_DEFS["lmonth"] = {
 multiply = 1,
 units  = "kWh",
 index    = 31,
 descr    = "Accumulated Energy Last Month"
 }
 
-data["iac"] = {
+DATA_DEFS["iac"] = {
 multiply = 0.1,
 units  = "A",
 index	 = 6,
 descr    = "Grid Current"
 }
 
-data["vac"] = {
+DATA_DEFS["vac"] = {
 multiply = 0.1,
 units  = "V",
 index	 = 4,
 descr    = "Grid Voltage"
 }
 
-data["fac"] = {
+DATA_DEFS["fac"] = {
 multiply = 0.01,
 units  = "Hz",
 index	 = 20,
@@ -132,13 +112,13 @@ function parseResponse(str)
 --  local lowbyte =  string.sub(str,1,1) or "0"
 --  print((lowbyte..highbyte):tohex())
   
-  for i in pairs(data) do
-    dataIndex = prefixLen + (data[i].index * 2)
+  for i in pairs(DATA_DEFS) do
+    dataIndex = prefixLen + (DATA_DEFS[i].index * 2)
     print(dataIndex .. ":" .. i)
     local lowbyte =  string.sub(hexData, dataIndex, dataIndex+1) or "0"
     local highbyte = string.sub(hexData, dataIndex+2, dataIndex+3) or "0"
     local val = (highbyte .. lowbyte)
-    print(val .. "=" .. (tonumber(val, 16) * data[i].multiply) .. data[i].units)
+    print(val .. "=" .. (tonumber(val, 16) * DATA_DEFS[i].multiply) .. DATA_DEFS[i].units)
   end
 
 end
@@ -148,7 +128,7 @@ if debug then
 end
 
 serialport = assert(io.open(SERIAL_PORT,"w"))
-serialport:write(string.fromhex(inquiryHex))
+serialport:write(string.fromhex(INQUIRY_HEX))
 serialport:close()
 
 
