@@ -2,10 +2,13 @@ print("Ginlong Invertor Poller started\n")
 
 SERIAL_PORT = "/dev/rfcomm0"
 
--- Bytes to send to request info from invertor
+-- Max number of times to retry reading response from serial port after sending a inquiry request
+MAX_RETRIES = 5
+
+-- Bytes to send to request data from invertor
 inquiryHex  = "7E01A1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A2"
 -- all valid responses from invertor begin with this set of bytes
-responsePrefix  = "7E01A11C"
+RESPONSE_PREFIX  = "7E01A11C"
 
 --------------------------------------------------
 -- hex start indeces and lengths for certain data
@@ -118,9 +121,9 @@ end
 
 function parseResponse(str)
   if str == nill then return end
-  local prefixLen = string.len(responsePrefix) + 1
+  local prefixLen = string.len(RESPONSE_PREFIX) + 1
   local hexData = str:tohex()
-  if string.sub(hexData, 1, #responsePrefix) == responsePrefix then
+  if string.sub(hexData, 1, #RESPONSE_PREFIX) == RESPONSE_PREFIX then
       print("Data OK: " .. "[" .. #str .."]" .. hexData)
   else
     print("Data BAD: " .. "[" .. #str .."]" .. hexData)
@@ -135,18 +138,14 @@ function parseResponse(str)
     local lowbyte =  string.sub(hexData, dataIndex, dataIndex+1) or "0"
     local highbyte = string.sub(hexData, dataIndex+2, dataIndex+3) or "0"
     local val = (highbyte .. lowbyte)
---    if (data[i].flip == 1) then
---      val = (lowbyte .. highbyte)
---    end
     print(val .. "=" .. (tonumber(val, 16) * data[i].multiply) .. data[i].units)
   end
 
 end
 
-local test = assert(io.open("docs/examples/reading1.bin","r"))
---parseResponse(test:read("*all"))
-
---local test = assert(io.open("t1.bin","w"))
+if debug then
+  dumpResponse = assert(io.open("reading.bin","w"))
+end
 
 serialport = assert(io.open(SERIAL_PORT,"w"))
 serialport:write(string.fromhex(inquiryHex))
@@ -154,13 +153,15 @@ serialport:close()
 
 
 local tries = 0
-while tries < 5 do
+while tries < MAX_RETRIES do
     print("try " .. tries)
     serialport = assert(io.open(SERIAL_PORT,"r"))
     local result = serialport:read("*all")
     if (result ~= nil) and (string.len(result) > 0) then
-        test:write(result)
-        test:close()
+        if debug then
+          dumpResponse:write(result)
+          dumpResponse:close()
+        end
         parseResponse(result)
         return
     end
