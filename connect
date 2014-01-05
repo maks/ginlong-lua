@@ -1,4 +1,4 @@
-#!bin/sh
+#!/bin/sh
 
 # Connect to Inverter via BT
 rfcomm connect rfcomm0 &
