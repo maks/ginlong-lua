@@ -1,5 +1,7 @@
 print("Ginlong Invertor Poller started\n")
 
+DEBUG = false
+
 SERIAL_PORT = "/dev/rfcomm0"
 
 -- Max number of times to retry reading response from serial port after sending a inquiry request
@@ -123,7 +125,7 @@ function parseResponse(str)
 
 end
 
-if debug then
+if DEBUG then
   dumpResponse = assert(io.open("reading.bin","w"))
 end
 
@@ -138,7 +140,7 @@ while tries < MAX_RETRIES do
     serialport = assert(io.open(SERIAL_PORT,"r"))
     local result = serialport:read("*all")
     if (result ~= nil) and (string.len(result) > 0) then
-        if debug then
+        if DEBUG then
           dumpResponse:write(result)
           dumpResponse:close()
         end
