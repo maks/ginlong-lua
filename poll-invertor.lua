@@ -1,3 +1,5 @@
+#!/usr/bin/env lua
+
 print("Ginlong Invertor Poller started\n")
 
 login = require "login"
@@ -118,9 +120,10 @@ function parseResponse(str)
   local prefixLen = string.len(RESPONSE_PREFIX) + 1
   local hexData = str:tohex()
   if string.sub(hexData, 1, #RESPONSE_PREFIX) == RESPONSE_PREFIX then
-      print("Data OK: " .. "[" .. #str .."]" .. hexData)
+    print("Data OK: " .. "[" .. #str .."]" .. hexData)
   else
     print("Data BAD: " .. "[" .. #str .."]" .. hexData)
+    return
   end
   
   local values = {}
