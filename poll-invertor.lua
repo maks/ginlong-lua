@@ -127,16 +127,17 @@ function parseResponse(str)
   end
   
   local values = {}
+  local debugDump = ""
   for i in pairs(DATA_DEFS) do
     dataIndex = prefixLen + (DATA_DEFS[i].index * 2)
-    print(dataIndex .. ":" .. i)
     local lowbyte =  string.sub(hexData, dataIndex, dataIndex+1) or "0"
     local highbyte = string.sub(hexData, dataIndex+2, dataIndex+3) or "0"
     local val = (highbyte .. lowbyte)
     local result = (tonumber(val, 16) * DATA_DEFS[i].multiply)
-    print(val .. "=" .. result .. DATA_DEFS[i].units)
+    debugDump = debugDump .. " " .. (val .. "=" .. result .. DATA_DEFS[i].units)
     values[i] = result
   end
+  print(debugDump)
   wattage = (values["vpv1"] * values["ipv1"]) + (values["vpv2"] * values["ipv2"])
   print("WATTAGE:" .. wattage)
   sendToPVOutput(wattage)
