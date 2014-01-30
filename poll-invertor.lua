@@ -1,4 +1,4 @@
-#!/usr/bin/env lua
+#!/usr/bin/lua
 
 print("Ginlong Invertor Poller started\n")
 
