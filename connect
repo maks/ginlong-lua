@@ -1,26 +1,25 @@
 #!/bin/bash
-if [ -c /dev/rfcomm0 ]
-  then
+
+echo [`date`] checking for rfcomm0
+if rfcomm show 0 ; then
   echo "rfcomm0 already up"
   exit
 fi
 rfcomm release rfcomm0
-hcitool scan
+
+sleep 1
+
+killall rfcomm
 
 # Accept incoming connections (in background)
-rfcomm connect rfcomm0 >> /var/log/rfcomm0 2>&1 &
-
-# Loop forever
-# Wait for our socket to pop in
-while [ ! -c /dev/rfcomm0 ]
-  do
-  echo [`date`] waiting for rfcomm0
-  sleep 15
-done
+date >> /var/log/rfcomm0
+rfcomm connect 0 >> /var/log/rfcomm0 2>&1 &
 
 sleep 5
-echo "setting STTY"
-# set correct config for BT "serial port" connection
-stty -F /dev/rfcomm0 1:0:cbd:0:3:1c:7f:15:1:10:0:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
-
-sleep 5
+if rfcomm show 0 ; then
+  echo "setting STTY"
+  # set correct config for BT "serial port" connection
+  stty -F /dev/rfcomm0 1:0:cbd:0:3:1c:7f:15:1:10:0:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
+else
+  echo "/dev/rfcomm0 missing"
+fi
