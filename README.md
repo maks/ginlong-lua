@@ -35,7 +35,7 @@ Setup
 Sample Crontab
 --------------
 ```
-*/1  7-21  *  *  * cd /home/maks/ginglong-lua;./poll-invertor.lua >> /tmp/invertor.log 2>&1
-0    7     *  *  * rfcomm connect 0 >> /tmp/rfcomm.log 2>&1 
+*/1  7-21  *  *  * cd /home/maks/ginlong-lua;./poll-invertor.lua >> /tmp/invertor.log 2>&1
+0    7     *  *  * cd /home/maks/ginlong-lua; ./connect
 0    22    *  *  * rfcomm release 0 >> /tmp/rfcomm.log 2>&1
 ```
