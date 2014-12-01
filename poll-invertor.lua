@@ -91,6 +91,9 @@ index	 = 20,
 descr    = "Grid Frequency"
 }
 
+function log(mesg)
+  print("["..os.date().."]".." "..mesg)
+end
 
 function string.fromhex(str)
   if str ~= nil then
@@ -120,9 +123,9 @@ function parseResponse(str)
   local prefixLen = string.len(RESPONSE_PREFIX) + 1
   local hexData = str:tohex()
   if string.sub(hexData, 1, #RESPONSE_PREFIX) == RESPONSE_PREFIX then
-    print("Data OK: " .. "[" .. #str .."]" .. hexData)
+    log("Data OK: " .. "[" .. #str .."]" .. hexData)
   else
-    print("Data BAD: " .. "[" .. #str .."]" .. hexData)
+    log("Data BAD: " .. "[" .. #str .."]" .. hexData)
     return
   end
   
@@ -137,9 +140,9 @@ function parseResponse(str)
     debugDump = debugDump .. " " .. (val .. "=" .. result .. DATA_DEFS[i].units)
     values[i] = result
   end
-  print(debugDump)
+  log(debugDump)
   wattage = (values["vpv1"] * values["ipv1"]) + (values["vpv2"] * values["ipv2"])
-  print("WATTAGE:" .. wattage)
+  log("WATTAGE:" .. wattage)
   sendToPVOutput(wattage)
 end
 
@@ -157,7 +160,7 @@ function sendToPVOutput(wattage)
   vals.wattage = wattage
   
   curlStr = expand("$curlExe -d d=\"$date\" -d t=\"$time\" -d v2=\"$wattage\" -H \"$apiKeyHeader\" -H  \"$sysidHeader\" $url", vals)
-  print("EXEC:" .. curlStr)
+  log("EXEC:" .. curlStr)
   os.execute(curlStr)
 end
 
@@ -173,7 +176,7 @@ serialport:close()
 
 local tries = 0
 while tries < MAX_RETRIES do
-    print("try " .. tries)
+    log("try " .. tries)
     serialport = assert(io.open(SERIAL_PORT,"r"))
     local result = serialport:read("*all")
     if (result ~= nil) and (string.len(result) > 0) then
@@ -184,7 +187,7 @@ while tries < MAX_RETRIES do
         parseResponse(result)
         return
     end
-    print("failed to read response")
+    log("failed to read response")
     tries = tries+1
     serialport:close()
 end
